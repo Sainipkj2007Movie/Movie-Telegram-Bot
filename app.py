@@ -43,6 +43,7 @@ def index():
                 # Handle movie name input from admin
                 movie_name = text
                 admin_state[user_id]["movie_name"] = movie_name
+                admin_state[user_id]["waiting_for_movie_name"] = False
                 admin_state[user_id]["waiting_for_date"] = True
 
                 response_text = f"Your Provided Movie Name - {movie_name}, Now provide the Date (DD/MM/YYYY) when it was released."
@@ -59,7 +60,6 @@ def index():
                     del admin_state[user_id]
                     response_text = "Movie details submitted successfully!"
                     requests.post(f"{TELEGRAM_API}/sendMessage", json={"chat_id": chat_id, "text": response_text})
-
                 else:
                     response_text = "Invalid date format. Please provide the date in DD/MM/YYYY format."
                     requests.post(f"{TELEGRAM_API}/sendMessage", json={"chat_id": chat_id, "text": response_text})
@@ -86,7 +86,10 @@ def get_file_path(file_id):
 
 def send_video_to_channel(file_path):
     """Send video to the private channel."""
-    requests.post(f"{TELEGRAM_API}/sendVideo", json={"chat_id": CHANNEL_ID, "video": file_path})
+    response = requests.post(f"{TELEGRAM_API}/sendVideo", json={"chat_id": CHANNEL_ID, "video": file_path})
+    if response.ok:
+        result = response.json()
+        return result["result"]["message_id"]
 
 def validate_date_format(date_str):
     """Validate date format as DD/MM/YYYY."""
