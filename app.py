@@ -63,12 +63,13 @@ def handle_inline_query(inline_query_id, query_text):
             "mpeg4_file_id": f"{CHANNEL_ID}/{movie['Massage Id']}",
             "title": movie["Movie Name"],
             "caption": f"⭐ {movie['Movie Name']}\n📅 Released: {movie['Date Added']}",
-        })
+            })
             
     # Send results to Telegram
     requests.post(f"{TELEGRAM_API}/answerInlineQuery", json={
         "inline_query_id": inline_query_id,
-        "results": results
+        "results": results,
+        "cache_time": 0
     })
 
 #def handle_movie_selection(chat_id, message_id):
