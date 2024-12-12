@@ -58,44 +58,21 @@ def handle_inline_query(inline_query_id, query_text):
     results = []
     for idx, movie in enumerate(filtered_movies):
         results.append({
-            "type": "article",
+            "type": "mpeg4_gif",  # Change to video/document handling
             "id": str(idx),
+            "mpeg4_file_id": f"{CHANNEL_ID}/{movie['Massage Id']}",
             "title": movie["Movie Name"],
-            "description": f"Released: {movie['Date Added']}",
-            "input_message_content": {
-                "message_text": f"Fetching the movie..."
-            },
-    try:
-        # Forward the movie from the channel to the user
-        response = requests.post(f"{TELEGRAM_API}/forwardMessage", json={
-            "chat_id": chat_id,
-            "from_chat_id": CHANNEL_ID,
-            "message_id": int(message_id)
+            "caption": f"⭐ {movie['Movie Name']}\n📅 Released: {movie['Date Added']}",
         })
-
-        if response.ok:
-            requests.post(f"{TELEGRAM_API}/sendMessage", json={
-                "chat_id": chat_id,
-                "text": "Movie has been sent successfully!"
-            })
-        else:
-            requests.post(f"{TELEGRAM_API}/sendMessage", json={
-                "chat_id": chat_id,
-                "text": "Failed to fetch the movie. Please try again later."
-            })
-    except Exception as e:
-        requests.post(f"{TELEGRAM_API}/sendMessage", json={
-            "chat_id": chat_id,
-            "text": f"Error: {str(e)}"
-        })
+            
     # Send results to Telegram
     requests.post(f"{TELEGRAM_API}/answerInlineQuery", json={
         "inline_query_id": inline_query_id,
         "results": results
     })
 
-def handle_movie_selection(chat_id, message_id):
-    """Forward the selected movie to the user."""
+#def handle_movie_selection(chat_id, message_id):
+  #  """Forward the selected movie to the user."""
     
 
 if __name__ == "__main__":
