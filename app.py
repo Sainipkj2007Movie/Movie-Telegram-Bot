@@ -3,12 +3,12 @@ import requests
 
 app = Flask(__name__)
 
-# Bot ke liye token aur API URL
+# Telegram bot token and API URL
 TELEGRAM_TOKEN = "7808291028:AAGRsVUGT2id7yrO_XaRPlYBtoYLYb_jzcg"
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-# Private channel video file_id
-VIDEO_FILE_ID = "BAACAgEAAxkBAAIBB2dcZOLbovWF0VBR-o9uhWz92iLOAAKcBQACcA4RR6-WKst4MQMkNgQ"  # Replace with actual video file_id
+# Video File ID
+VIDEO_FILE_ID = "BAACAgEAAxkBAAIBB2dcZOLbovWF0VBR-o9uhWz92iLOAAKcBQACcA4RR6-WKst4MQMkNgQ"
 
 @app.route("/", methods=["POST", "GET"])
 def index():
@@ -20,20 +20,19 @@ def index():
             inline_query_id = data["inline_query"]["id"]
             query = data["inline_query"]["query"]
 
-            # Check if the user typed "video"
-            if query.lower() == "video":  # Matching the keyword "video"
-                # Prepare inline query result with video file_id
-                results = [
-                    {
-                        "type": "video",
-                        "id": "unique-id-1",
-                        "video_file_id": VIDEO_FILE_ID,  # Use the file ID of the video from the channel
-                        "title": "Sample Video",
-                        "caption": "Here is the video from the private channel.",
+            # Check if the query is "A" and respond with the video
+            if query.lower() == "a":
+                results = [{
+                    "type": "video",
+                    "id": "1",
+                    "title": "A murari",  # Video title
+                    "video_file_id": VIDEO_FILE_ID,
+                    "input_message_content": {
+                        "message_text": "Watch 'A Murari' Video"
                     }
-                ]
+                }]
 
-                # Send the inline query result
+                # Send inline query result with video
                 requests.post(f"{TELEGRAM_API}/answerInlineQuery", json={
                     "inline_query_id": inline_query_id,
                     "results": results
