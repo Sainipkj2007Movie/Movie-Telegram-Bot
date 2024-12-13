@@ -7,7 +7,7 @@ app = Flask(__name__)
 TELEGRAM_TOKEN = "7808291028:AAGRsVUGT2id7yrO_XaRPlYBtoYLYb_jzcg"
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-# Video File ID
+# Video File ID (Ensure this is a valid file ID)
 VIDEO_FILE_ID = "BAACAgEAAxkBAAIBB2dcZOLbovWF0VBR-o9uhWz92iLOAAKcBQACcA4RR6-WKst4MQMkNgQ"
 
 @app.route("/", methods=["POST", "GET"])
@@ -27,16 +27,23 @@ def index():
                     "id": "1",
                     "title": "A murari",  # Video title
                     "video_file_id": VIDEO_FILE_ID,
+                    "caption": "Watch 'A Murari' Video",  # Caption for the video
                     "input_message_content": {
                         "message_text": "Watch 'A Murari' Video"
                     }
                 }]
 
                 # Send inline query result with video
-                requests.post(f"{TELEGRAM_API}/answerInlineQuery", json={
+                response = requests.post(f"{TELEGRAM_API}/answerInlineQuery", json={
                     "inline_query_id": inline_query_id,
                     "results": results
                 })
+
+                # Check if the request was successful
+                if response.status_code == 200:
+                    print("Inline query response sent successfully.")
+                else:
+                    print(f"Failed to send inline query response: {response.text}")
 
         return {"status": "ok"}
     return "Telegram bot is running!"
