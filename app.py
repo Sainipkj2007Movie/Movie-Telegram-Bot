@@ -1,82 +1,43 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import requests
 
 app = Flask(__name__)
 
-# Telegram bot token and API URL
+# Bot ke liye token aur API URL
 TELEGRAM_TOKEN = "7808291028:AAGRsVUGT2id7yrO_XaRPlYBtoYLYb_jzcg"
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-# Datamuse API URL
-DATAMUSE_API = "https://api.datamuse.com/words?ml="
-
-# Admin chat ID
-ADMIN_CHAT_ID = 6150091802
+# Private channel ID and video message ID
+PRIVATE_CHANNEL_ID = "-1002403053494"
+VIDEO_FILE_ID = "BAACAgEAAxkBAAIBB2dcZOLbovWF0VBR-o9uhWz92iLOAAKcBQACcA4RR6-WKst4MQMkNgQ"  # Replace with actual file_id
 
 @app.route("/", methods=["POST", "GET"])
 def index():
     if request.method == "POST":
-        # Check if the request is JSON
-        if not request.is_json:
-            return jsonify({"error": "Invalid request, expecting JSON"}), 400
-        
         data = request.json
-        
-        # Send the received data to the admin chat (user 6150091802)
-        try:
-            requests.post(f"{TELEGRAM_API}/sendMessage", json={
-                "chat_id": ADMIN_CHAT_ID,
-                "text": f"Received data: {data}"
-            })
-        except Exception as e:
-            print(f"Error sending data to admin: {e}")
-        
+
         # Handle inline query
         if "inline_query" in data:
             inline_query_id = data["inline_query"]["id"]
-            query = data["inline_query"]["query"]
 
-            # Fetch data from Datamuse API
-            try:
-                datamuse_response = requests.get(DATAMUSE_API + query)
-                datamuse_response.raise_for_status()  # Raise an exception for HTTP errors
-                words = datamuse_response.json()
-            except requests.exceptions.RequestException as e:
-                print(f"Error fetching data from Datamuse API: {e}")
-                words = []
+            # Prepare inline query result
+            results = [
+                {
+                    "type": "video",
+                    "id": "unique-id-1",
+                    "video_file_id": VIDEO_FILE_ID,  # Use the file ID of the video from the channel
+                    "title": "Sample Video",
+                    "caption": "Here is the video from the private channel.",
+                }
+            ]
 
-            # Prepare inline query results
-            results = []
-            for word in words[:10]:  # Top 10 results
-                results.append({
-                    "type": "article",
-                    "id": word["word"],
-                    "title": word["word"],
-                    "input_message_content": {
-                        "message_text": f"Word: {word['word']}"
-                    }
-                })
-
-            # Send inline query results
+            # Send the inline query result
             requests.post(f"{TELEGRAM_API}/answerInlineQuery", json={
                 "inline_query_id": inline_query_id,
                 "results": results
             })
 
-        # Handle normal messages
-        elif "message" in data:
-            chat_id = data["message"]["chat"]["id"]
-            text = data["message"]["text"]
-            response_text = f"You said: {text}"
-
-            # Send a reply to the original sender
-            requests.post(f"{TELEGRAM_API}/sendMessage", json={
-                "chat_id": chat_id,
-                "text": response_text
-            })
-
-        return jsonify({"status": "ok"}), 200
-    
+        return {"status": "ok"}
     return "Telegram bot is running!"
 
 if __name__ == "__main__":
