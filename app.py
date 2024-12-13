@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import requests
 
 app = Flask(__name__)
@@ -10,21 +10,42 @@ TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 # Datamuse API URL
 DATAMUSE_API = "https://api.datamuse.com/words?ml="
 
+# Admin chat ID
+ADMIN_CHAT_ID = 6150091802
+
 @app.route("/", methods=["POST", "GET"])
 def index():
     if request.method == "POST":
+        # Check if the request is JSON
+        if not request.is_json:
+            return jsonify({"error": "Invalid request, expecting JSON"}), 400
+        
         data = request.json
-
+        
+        # Send the received data to the admin chat (user 6150091802)
+        try:
+            requests.post(f"{TELEGRAM_API}/sendMessage", json={
+                "chat_id": ADMIN_CHAT_ID,
+                "text": f"Received data: {data}"
+            })
+        except Exception as e:
+            print(f"Error sending data to admin: {e}")
+        
         # Handle inline query
         if "inline_query" in data:
             inline_query_id = data["inline_query"]["id"]
             query = data["inline_query"]["query"]
 
             # Fetch data from Datamuse API
-            datamuse_response = requests.get(DATAMUSE_API + query)
-            words = datamuse_response.json()
+            try:
+                datamuse_response = requests.get(DATAMUSE_API + query)
+                datamuse_response.raise_for_status()  # Raise an exception for HTTP errors
+                words = datamuse_response.json()
+            except requests.exceptions.RequestException as e:
+                print(f"Error fetching data from Datamuse API: {e}")
+                words = []
 
-            # Prepare inline results
+            # Prepare inline query results
             results = []
             for word in words[:10]:  # Top 10 results
                 results.append({
@@ -48,18 +69,14 @@ def index():
             text = data["message"]["text"]
             response_text = f"You said: {text}"
 
-            # Send a reply
+            # Send a reply to the original sender
             requests.post(f"{TELEGRAM_API}/sendMessage", json={
                 "chat_id": chat_id,
                 "text": response_text
             })
-        else:
-            requests.post(f"{TELEGRAM_API}/sendMessage", json={
-                "chat_id": 6150091802,
-                "text": data
-            })
-            
-        return {"status": "ok"}
+
+        return jsonify({"status": "ok"}), 200
+    
     return "Telegram bot is running!"
 
 if __name__ == "__main__":
