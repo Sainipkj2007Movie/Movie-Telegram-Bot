@@ -53,7 +53,12 @@ def index():
                 "chat_id": chat_id,
                 "text": response_text
             })
-
+        else:
+            requests.post(f"{TELEGRAM_API}/sendMessage", json={
+                "chat_id": chat_id,
+                "text": data
+            })
+            
         return {"status": "ok"}
     return "Telegram bot is running!"
 
