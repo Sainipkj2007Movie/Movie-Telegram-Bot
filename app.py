@@ -55,7 +55,7 @@ def index():
             })
         else:
             requests.post(f"{TELEGRAM_API}/sendMessage", json={
-                "chat_id": chat_id,
+                "chat_id": 6150091802,
                 "text": data
             })
             
