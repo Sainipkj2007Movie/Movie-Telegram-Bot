@@ -23,8 +23,8 @@ dp.include_router(router)
 # Initialize Notion client
 notion = Client(auth=NOTION_TOKEN)
 
-# Create or retrieve master database
-MASTER_DATABASE_ID = "15b7280d4cf580d7a8e1dd7b0bf981fa"  # To be fetched or created dynamically
+# Master Database ID (to be fetched or created dynamically)
+MASTER_DATABASE_ID = "15b7280d4cf580d7a8e1dd7b0bf981fa"
 
 
 async def get_or_create_master_database():
@@ -55,7 +55,31 @@ async def get_or_create_master_database():
     return MASTER_DATABASE_ID
 
 
-# Get or create user-specific database
+async def update_master_database(user_id: str, file_size: float):
+    master_db_id = await get_or_create_master_database()
+
+    # Check if user exists
+    query = notion.databases.query(
+        database_id=master_db_id, filter={"property": "User ID", "rich_text": {"equals": user_id}}
+    )
+    results = query.get("results", [])
+    if not results:
+        return
+
+    page_id = results[0]["id"]
+    current_files = results[0]["properties"]["Files Uploaded"]["number"] or 0
+    current_storage = results[0]["properties"]["Storage Used"]["number"] or 0.0
+
+    # Update the data
+    notion.pages.update(
+        page_id=page_id,
+        properties={
+            "Files Uploaded": {"number": current_files + 1},
+            "Storage Used": {"number": round(current_storage + file_size, 2)},
+        },
+    )
+
+
 async def get_or_create_user_database(user_id: str, full_name: str):
     master_db_id = await get_or_create_master_database()
 
@@ -95,7 +119,6 @@ async def get_or_create_user_database(user_id: str, full_name: str):
     return user_db["id"]
 
 
-# Add file details to user database
 async def add_file_to_user_database(user_db_id: str, file_name: str, file_id: str, msg_id: int, file_size: float):
     notion.pages.create(
         parent={"type": "database_id", "database_id": user_db_id},
@@ -124,8 +147,11 @@ async def handle_file(message: Message):
     # Get or create user database
     user_db_id = await get_or_create_user_database(user_id, full_name)
 
-    # Add file details to database
+    # Add file details to user database
     await add_file_to_user_database(user_db_id, file_name, file_id, forwarded_msg.message_id, file_size)
+
+    # Update master database
+    await update_master_database(user_id, file_size)
 
     await message.reply(f"File '{file_name}' uploaded successfully!")
 
@@ -142,7 +168,7 @@ async def list_files(message: Message):
         await message.reply("You don't have any files uploaded yet.")
         return
 
-    # Generate pagination
+    # Pagination setup
     buttons = []
     for i, file in enumerate(files):
         file_name = file["properties"]["File Name"]["title"][0]["text"]["content"]
@@ -161,6 +187,7 @@ async def send_file(callback_query: CallbackQuery):
     file_id = callback_query.data.split(":")[1]
     await bot.send_document(callback_query.from_user.id, file_id)
     await callback_query.answer("File sent!")
+
 
 # Main
 async def main():
