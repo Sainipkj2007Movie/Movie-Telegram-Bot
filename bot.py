@@ -5,7 +5,7 @@ from telethon import TelegramClient
 app = Flask(__name__)
 
 # Your Telegram Bot Token
-TELEGRAM_TOKEN = ""7808291028:AAGRsVUGT2id7yrO_XaRPlYBtoYLYb_jzcg
+TELEGRAM_TOKEN = "7808291028:AAGRsVUGT2id7yrO_XaRPlYBtoYLYb_jzcg"
 TELEGRAM_API = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
 # Admin Bot's API ID and Hash
