@@ -1,6 +1,7 @@
 import logging
 import asyncio
-from aiogram import Bot, Dispatcher, Router
+from aiogram import Bot, Dispatcher, Router, F
+from aiogram.filters import Command
 from aiogram.types import Message
 import os
 
@@ -17,12 +18,12 @@ router = Router()
 dp.include_router(router)
 
 # /start command handler
-@router.message(commands=["start"])
+@router.message(Command(commands=["start"]))
 async def start_command(message: Message):
     await message.reply("Hello! I'm your Aiogram bot. How can I assist you today?")
 
 # /help command handler
-@router.message(commands=["help"])
+@router.message(Command(commands=["help"]))
 async def help_command(message: Message):
     await message.reply("Use /start to start interacting with me or /help for assistance.")
 
