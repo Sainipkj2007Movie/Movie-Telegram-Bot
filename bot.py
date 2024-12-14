@@ -1,6 +1,5 @@
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import ParseMode
 from aiogram.utils import executor
 import os
 
@@ -29,5 +28,4 @@ async def echo(message: types.Message):
     await message.answer(f"Echo: {message.text}")
 
 if __name__ == '__main__':
-    from aiogram import executor
     executor.start_polling(dp, skip_updates=True)
