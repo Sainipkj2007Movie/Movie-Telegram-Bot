@@ -1,52 +1,33 @@
-from telethon import TelegramClient, events
-from telethon.tl.types import InputPeerUser
-import asyncio
+import logging
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import ParseMode
+from aiogram.utils import executor
+import os
 
-# Bot Token for your Telegram bot
-TELEGRAM_TOKEN = "7808291028:AAGRsVUGT2id7yrO_XaRPlYBtoYLYb_jzcg"
-# Admin Bot's API ID and Hash
-API_ID = '24673538'  # Replace with your API ID
-API_HASH = '555639745e6ceee1ae3797866136998f'  # Replace with your API Hash
+API_TOKEN = os.getenv('TELEGRAM_TOKEN')  # Set the bot token as an environment variable
 
-# The ID of the second bot (to forward messages to)
-OTHER_BOT_ID = 2138323286  # Replace with the second bot ID
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
-# Create the Telegram client
-client = TelegramClient('bot', API_ID, API_HASH)
+# Initialize bot and dispatcher
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
 
-# Function to forward messages and handle replies
-@client.on(events.NewMessage)
-async def handler(event):
-    user_message = event.message
-    user = event.sender_id  # Get the user who sent the message
+# Start command handler
+@dp.message_handler(commands=['start'])
+async def cmd_start(message: types.Message):
+    await message.reply("Hello! I'm your Aiogram bot. How can I help you today?")
 
-    # Forward the received message to the other bot
-    # If the message is a text message:
-    if user_message.text:
-        forwarded_message = await client.send_message(OTHER_BOT_ID, user_message.text)
-    # If the message is a file:
-    elif user_message.media:
-        forwarded_message = await client.send_file(OTHER_BOT_ID, user_message.media)
+# Help command handler
+@dp.message_handler(commands=['help'])
+async def cmd_help(message: types.Message):
+    await message.reply("You can interact with me using /start or /help.")
 
-    # Wait for the reply from the second bot
-    @client.on(events.NewMessage(from_users=OTHER_BOT_ID))
-    async def reply_handler(reply_event):
-        # Check if the reply is from the second bot
-        reply = reply_event.message
-        # Forward the reply back to the user
-        await client.send_message(user, reply.text or "File received and forwarded.")  # Handle text and media
+# Default message handler
+@dp.message_handler()
+async def echo(message: types.Message):
+    await message.answer(f"Echo: {message.text}")
 
-        # Optionally, if the second bot replies with a file
-        if reply.media:
-            await client.send_file(user, reply.media)
-
-        # Unregister the reply handler after sending the reply
-        reply_handler._handler.remove()
-
-# Start the client and run the bot
-client.start(bot_token=TELEGRAM_TOKEN)
-
-print("Bot is running...")
-
-# Keep the bot running
-client.run_until_disconnected()
+if __name__ == '__main__':
+    from aiogram import executor
+    executor.start_polling(dp, skip_updates=True)
